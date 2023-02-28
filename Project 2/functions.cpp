@@ -122,7 +122,7 @@ void searchbook(int searchopt, int num, Bookdetails books[]) { // function to se
 
 void  print(Bookdetails bookl[], int number, int position) {  // Recursive function to Print out the books in the library
 	if (position == number) {
-		cout << "There are " << number << " in the library." << endl;
+		cout << "There are " << number << " books in the library." << endl;
 	}
 	else {
 		cout << bookl[position].author_full_name << "       " << bookl[position].Book_title << "           ";
