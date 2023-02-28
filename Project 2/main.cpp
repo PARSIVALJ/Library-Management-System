@@ -1,11 +1,11 @@
 ﻿// Library Management System
+
 #include "Book_info.h"
 
-
-// main
+// main function
 int main() {
 
-	Bookdetails booklog[len];// Array of structures
+	Bookdetails booklog[len];  // Array of structures
 	int option, number = 0, searchoption, yesorno;
 	cout << "Select an option from menu 1-4" << endl;
 	cout << "1: Add a book" << endl;
