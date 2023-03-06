@@ -1,97 +1,51 @@
-﻿// Library Management System
+﻿#include "Book_info.h"
 
-#include "Book_info.h"
-
-// main function
 int main() {
+	sqlite3* database;
+	char* error_message = 0;
+	int rc,option;
+	const char* sql;
+	const char* data = "Callback function called.";
 
-	Bookdetails booklog[len];  // Array of structures
-	int option, number = 0, searchoption, yesorno;
-	cout << "Select an option from menu 1-4" << endl;
-	cout << "1: Add a book" << endl;
-	cout << "2: Search for a book" << endl;
-	cout << "3: Print and Output the total number of books" << endl;
-	cout << "4: Exit" << endl;
-	cin >> option;
-
-	while (option != 4) {
-
-		if (option == 1) {
-
-			while (number < len) {
-
-				addbook(booklog, number);
-				cout << "Do you want to add another book? " << endl;
-				cout << "1:Yes" << endl << "2:No" << endl;
-				cin >> yesorno;
-
-				if (yesorno == 1) {
-
-					number++;
-
-				}
-				else if (yesorno == 2) {
-
-					break;
-
-				}
-			}
-		}
-		else if (option == 2) {
-
-			cout << "Search for a book:" << endl;
-			cout << "Enter option for seaching by: " << endl;
-			cout << "1: The title" << endl;
-			cout << "2: Author " << endl;
-			cout << "3: Year" << endl;
-			cout << "4: Availability for borrow" << endl;
-			cin >> searchoption;
-
-			searchbook(searchoption, number + 1, booklog);
-		}
-		else if (option == 3) {
-
-			cout << "Book Author       Book Title           Publication Year         ISBN             Availability for borrow" << endl;
-			cout << "\n";
-			int booknumber = 0;
-
-			print(booklog, number + 1, booknumber);
-
-			cout << "\n";
-		}
-
-		cout << "Select an option from menu 1-4" << endl << "1: Add a book" << endl << "2: Search for a book" << endl << "3: Print and Output the total number of books" << endl << "4: Exit" << endl;
-		cin >> option;
-
-		while (option == 1) {
-
-			number = number + 1;
-
-			while (number < len) {
-
-				addbook(booklog, number);
-				cout << "Do you want to add another book? " << endl;
-				cout << "1:Yes" << endl << "2:No" << endl;
-				cin >> yesorno;
-
-				if (yesorno == 1) {
-
-					number++;
-
-				}
-				else if (yesorno == 2) {
-
-					break;
-
-				}
-			}
-
-			cout << "Select an option from menu 1-4" << endl << "1: Add a book" << endl << "2: Search for a book" << endl << "3: Print and Output the total number of books" << endl << "4: Exit" << endl;
-			cin >> option;
-		}
+	//
+	rc = sqlite3_open("Library.db", &database);
+	
+	if (rc) {
+		cerr << "Can't open database: " << sqlite3_errmsg(database) << endl;
+		sqlite3_close(database);
+		return 1;
 	}
-	if (option == 4) {
+	else {
+		cout << "Connection successful\n";
+	}
+	sql = "CREATE TABLE IF NOT EXISTS BOOKS ("\
+		"title TEXT NOT NULL,"\
+		"author TEXT NOT NULL,"\
+		"publication INT NOT NULL,"\
+		"availability TEXT NOT NULL,"\
+		"isbn TEXT NOT NULL);";
 
-		cout << "Bye Bye" << endl;
+	rc = sqlite3_exec(database, sql, callback, (void*)data, &error_message);
+	if (rc != SQLITE_OK) {
+		cerr << "SQL erroe: " << error_message << endl;
+		sqlite3_free(error_message);
+	}
+	else {
+		cout << "Connection Successful.\n";
+	}
+
+	cout << "Welcome to the library Management System.\n";
+	cout << "1. Add a book\n";
+	cout << "2. Search for a book\n";
+	cout << "3. print and count the total number of books.\n";
+	cout << "4. Exit\n";
+	cin >> option;
+	while (option != 4) {
+		cin.ignore();
+		Book books;
+		if (option == 1) {
+			books.read_details(database);
+			books.save_details(database);
+		}
 	}
 }
