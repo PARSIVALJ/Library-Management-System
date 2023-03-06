@@ -12,6 +12,7 @@ Book::Book() {
 //
 void Book::read_details(sqlite3* db) {
 	string available[2] = { "Available","Not Available" };
+	int option;
 	cout << "Please,Enter book details:\n";
 	cout << "Title: ";
 	getline(cin, title);
@@ -29,7 +30,11 @@ void Book::read_details(sqlite3* db) {
 	cout << "Publicatioon Year: ";
 	cin >> publication_year;
 	cin.ignore();
-	availability = available[rand() % 2];
+	cout << "Is the book avilable for borrow:\n";
+	cout << "1. Yes\n";
+	cout << "2. No\n";
+	cin >> option;
+	availability = available[option-1];
 }
 
 //
@@ -37,7 +42,8 @@ void Book::save_details(sqlite3* db) {
 	char* error_message;
 	int rc;
 	char* sql;
-	sql = sqlite3_mprintf("INSERT INTO BOOKS(title,author,publication,availability,isbn) VALUES ('%q','%q', %f, '%q','%q')", title.c_str(), authors_name.c_str(), publication_year, availability.c_str(), isbn.c_str());
+	sql = sqlite3_mprintf("INSERT INTO BOOKS(title,author,publication,availability,isbn) VALUES ('%q','%q', %d, '%q','%q')", title.c_str(), authors_name.c_str(), publication_year, availability.c_str(), isbn.c_str());
+	cout << sql << endl;
 	rc = sqlite3_exec(db, sql, callback, 0, &error_message);
 	if (rc != SQLITE_OK) {
 		cout << rc << endl;
@@ -62,13 +68,15 @@ int print_callback(void* data, int argc, char** argv, char** colName) {
 	for (int i = 0; i < argc; i++) {
 		cout << colName[i] << " = " << argv[i] << endl;
 	}
-	return 1;
+	cout << "--------------------------------\n";
+
+	return 0;
 }
 
 //
 int is_in_database(sqlite3* db, string isbn) {
 	char sql[100];
-	snprintf(sql, 100, "SELECT * FROM BOOKS WHERE isbn='%q'", isbn);
+	snprintf(sql, 100, "SELECT * FROM BOOKS WHERE isbn='%s'", isbn.c_str());
 	int count = 0;
 	int rc = sqlite3_exec(db, sql, callback, &count, NULL);
 	if (rc != SQLITE_OK) {
@@ -128,7 +136,7 @@ int change_publication_year(sqlite3* db, string isbn) {
 	cin.ignore();
 	char* error_message = 0;
 	int rc;
-	char* sql = sqlite3_mprintf("UPDATE BOOKS SET publication =%f WHERE isbn='%q';", new_publication_year, isbn.c_str());
+	char* sql = sqlite3_mprintf("UPDATE BOOKS SET publication = %d WHERE isbn = '%q';", new_publication_year, isbn.c_str());
 	rc = sqlite3_exec(db, sql, callback, 0, &error_message);
 	if (rc != SQLITE_OK) {
 		fprintf(stderr, "SQL errow: %s\n", error_message);
@@ -170,7 +178,7 @@ bool delete_book(sqlite3* db, string isbn) {
 	int result = sqlite3_step(stmt);
 	sqlite3_finalize(stmt);
 	if (result == SQLITE_DONE) {
-		cout << "Account Deleted.\n";
+		cout << "Book Deleted.\n";
 		return true;
 	}
 	else {
@@ -209,12 +217,13 @@ void count_books(sqlite3* db) {
 		sqlite3_free(errmsg);
 	}
 	else {
-		cout << "Number of users in database: " << count << endl;
+		cout << "Number of books in database: " << count << endl;
 	}
 }
 
 //
 void search_by_title(sqlite3* db) {
+	int count = 0;
 	string keyword;
 	cout << "Enter keyword: ";
 	getline(cin, keyword);
@@ -232,16 +241,21 @@ void search_by_title(sqlite3* db) {
 		cout << "Availability: " << reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3)) << endl;
 		cout << "ISBN: " << reinterpret_cast<const char*>(sqlite3_column_text(stmt, 4)) << endl;
 		cout << "------------------------------------------------------------------------------\n";
+		result = sqlite3_step(stmt);
+		count++;
 	}
 	if (result != SQLITE_DONE) {
 		cout << "Error searching for book.\n";
 	}
-
+	if (count == 0) {
+		cout << "Book does not exist in our database\n.";
+	}
 	sqlite3_finalize(stmt);
 }
 
 //
 void search_by_author(sqlite3* db) {
+	int count = 0;
 	string keyword;
 	cout << "Enter keyword: ";
 	getline(cin, keyword);
@@ -259,21 +273,55 @@ void search_by_author(sqlite3* db) {
 		cout << "Availability: " << reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3)) << endl;
 		cout << "ISBN: " << reinterpret_cast<const char*>(sqlite3_column_text(stmt, 4)) << endl;
 		cout << "------------------------------------------------------------------------------\n";
+		result = sqlite3_step(stmt);
+		count++;
 	}
 	if (result != SQLITE_DONE) {
 		cout << "Error searching for book.\n";
 	}
-
+	if (count == 0) {
+		cout << "Book does not exist in our database\n.";
+	}
 	sqlite3_finalize(stmt);
 }
 
 //
 void check_availability(sqlite3* db) {
-	string keyword = "Available";
-	string sql = "SELECT title,author,publication,availability, isbn FROM BOOKS WHERE availability?";
+	int count = 0;
+	string sql = "SELECT title,author,publication,availability, isbn FROM BOOKS WHERE availability = 'Available'";
 	sqlite3_stmt* stmt;
 	sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
-	sqlite3_bind_text(stmt, 1, keyword.c_str(), -1, SQLITE_STATIC);
+	int result = sqlite3_step(stmt);
+	while (result == SQLITE_ROW) {
+		cout << "Title: " << reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0)) << endl;
+		cout << "Author(s): " << reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1)) << endl;
+		cout << "Publication Year: " << sqlite3_column_int(stmt, 2) << endl;
+		cout << "Availability: " << reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3)) << endl;
+		cout << "ISBN: " << reinterpret_cast<const char*>(sqlite3_column_text(stmt, 4)) << endl;
+		cout << "------------------------------------------------------------------------------\n";
+		result = sqlite3_step(stmt);
+		count++;
+	}
+	if (result != SQLITE_DONE) {
+		cout << "Error searching for book.\n";
+	}
+	if (count == 0) {
+		cout << "No book is available for borrow now. Try again later\n";
+	}
+	
+	sqlite3_finalize(stmt);
+}
+
+//
+void search_by_year(sqlite3* db) {
+	int count = 0, year;
+	cout << "Enter publication year: ";
+	cin >> year;
+	cin.ignore();
+	string sql = "SELECT title,author,publication,availability, isbn FROM BOOKS WHERE publication = ?";
+	sqlite3_stmt* stmt;
+	sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
+	sqlite3_bind_int(stmt, 1, year);
 	int result = sqlite3_step(stmt);
 
 	while (result == SQLITE_ROW) {
@@ -283,11 +331,38 @@ void check_availability(sqlite3* db) {
 		cout << "Availability: " << reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3)) << endl;
 		cout << "ISBN: " << reinterpret_cast<const char*>(sqlite3_column_text(stmt, 4)) << endl;
 		cout << "------------------------------------------------------------------------------\n";
+		result = sqlite3_step(stmt);
+		count ++;
 	}
 	if (result != SQLITE_DONE) {
 		cout << "Error searching for book.\n";
+	}
+	if (count == 0) {
+		cout << "Book does not exist in our database\n.";
 	}
 
 	sqlite3_finalize(stmt);
 }
 
+//
+void change_availability(sqlite3* db, string isbn) {
+	string available[] = { "Available","Not Available" };
+	int option;
+	cout << "Please choose availability:\n";
+	cout << "1. Availbale\n";
+	cout << "2. Not Available\n";
+	cin >> option;
+	cin.ignore();
+	char* error_message = 0;
+	int rc;
+	char* sql = sqlite3_mprintf("UPDATE BOOKS SET availability='%q' WHERE isbn ='%q';", available[option-1].c_str(), isbn.c_str());
+	rc = sqlite3_exec(db, sql, callback, 0, &error_message);
+	if (rc != SQLITE_OK) {
+		fprintf(stderr, "SQL error: %s\n", error_message);
+		sqlite3_free(error_message);
+		//
+	}
+	else {
+		cout << "Availability Status changed successfully\n";
+	}
+}
