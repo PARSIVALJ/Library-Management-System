@@ -1,4 +1,14 @@
-﻿#include "Book_info.h"
+﻿/** \file main.cpp
+* \brief The part of the whole project that users will be able to interact with.
+* \details The user will be able the functions that are in other parts of the project through this file. In this file a connection 
+* to the datase is created and the table is created or if it already exists this file accesses it.
+* <BR>
+* \author Joseph Uche
+* \version 0.1
+* \date 06-03-2023
+*/
+
+#include "Book_info.h"
 
 int main() {
 	sqlite3* database;
@@ -7,7 +17,7 @@ int main() {
 	const char* sql;
 	const char* data = "Callback function called.";
 
-	//
+	// Opening Connection to database
 	rc = sqlite3_open("Library.db", &database);
 	
 	if (rc) {
@@ -18,6 +28,8 @@ int main() {
 	else {
 		cout << "Connection successful\n";
 	}
+
+	//Creating Table in Databse
 	sql = "CREATE TABLE IF NOT EXISTS BOOKS ("\
 		"title TEXT NOT NULL,"\
 		"author TEXT NOT NULL,"\
@@ -34,6 +46,7 @@ int main() {
 		cout << "Connection Successful.\n";
 	}
 
+	// User Interaction
 	cout << "Welcome to the library Management System.\n";
 	cout << "1. Add a book\n";
 	cout << "2. Search for a book\n";
@@ -90,16 +103,16 @@ int main() {
 			cout << "2. Change Publication Year\n";
 			cout << "3. Change Book Title\n";
 			cout << "4. Change ISBN\n";
-			cout << "5. Chnage Availability Status\n";
+			cout << "5. Change Availability Status\n";
 			cout << "6. Delete Book\n";
 			cout << "7. Back\n";
 			cin >> option;
-			cin.ignore();
-			string isbn;
-			cout << "Enter the ISBN of the book that you want to change\\delete: ";
-			getline(cin, isbn);
+			
 			while (option != 7) {
-				
+				cin.ignore();
+				string isbn;
+				cout << "Enter the ISBN of the book that you want to change\\delete: ";
+				getline(cin, isbn);
 				if (option == 1) {
 					change_authors_name(database, isbn);
 				}
@@ -129,10 +142,7 @@ int main() {
 				cout << "6. Delete Book\n";
 				cout << "7. Back\n";
 				cin >> option;
-				cin.ignore();
-				string isbn;
-				cout << "Enter the ISBN of the book that you want to change\\delete: ";
-				getline(cin, isbn);
+				
 			}
 		}
 		else {

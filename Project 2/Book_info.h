@@ -1,3 +1,14 @@
+/** \file Book_info.h 
+* \brief Class declaration, function prototypes,class functions,necessary libraries are defined here.
+* \details The file contains the declaration of all the libraries that will be used in this project. It
+* also contains the declaration of the class from which objects will be created in the main program. It 
+* contains the prototype definitions for all the functions that will be required for the user tio communicate with the 
+* database.
+* <BR>
+* \author Joseph Uche
+* \date 06-03-2023
+*/
+
 #include <winsqlite/winsqlite3.h>
 #include <string>
 #include <cstring>
